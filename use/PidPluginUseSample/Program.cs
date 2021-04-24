@@ -23,7 +23,7 @@ namespace PidPluginUseSample
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
-            AddPidConnector(services, configuration);
+            AddPidPlugin(services, configuration);
 
             ServiceProvider serviceProvider =
                 services.BuildServiceProvider();
@@ -47,7 +47,7 @@ namespace PidPluginUseSample
             }
         }
 
-        static void AddPidConnector(IServiceCollection services, IConfiguration configuration)
+        static void AddPidPlugin(IServiceCollection services, IConfiguration configuration)
         {
             PidPluginSettings pidConnectorSettings = 
                 new PidPluginSettings();
