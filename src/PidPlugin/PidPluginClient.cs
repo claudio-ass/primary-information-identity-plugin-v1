@@ -3,64 +3,113 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using PidPlugin.Dtos;
+using PidPlugin.Cache;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace PidPlugin
 {
     public class PidPluginClient : IPidPluginClient
     {
-        protected readonly HttpClient httpClient = null;
+        protected readonly HttpClient               httpClient;
+        protected readonly ICacheAccessor           cacheAccessor;
+        protected readonly IOptions<CacheOptions>   options;
 
-        public PidPluginClient(HttpClient httpClient)
+        protected static SemaphoreSlim EntityBasicDataSemaphore      = new SemaphoreSlim(1);
+        protected static SemaphoreSlim EntityFullDataSemaphore       = new SemaphoreSlim(1);
+        protected static SemaphoreSlim SpecialRecordSemaphore        = new SemaphoreSlim(1);
+        protected static SemaphoreSlim BankAccountDetailSemaphore    = new SemaphoreSlim(1);
+        protected static SemaphoreSlim BankAccountOwnershipSemaphore = new SemaphoreSlim(1);
+
+        public PidPluginClient(HttpClient httpClient, ICacheAccessor cacheAccessor, IOptions<CacheOptions> options)
         {
             this.httpClient = httpClient ??
                 throw new ArgumentNullException(nameof(httpClient));
+
+            this.cacheAccessor = cacheAccessor ??
+                throw new ArgumentNullException(nameof(cacheAccessor));
+
+            this.options = options ??
+                throw new ArgumentNullException(nameof(options));
         }
 
         public async Task<EntityBasicData> GetEntityDataBasicAsync(string cuit, CancellationToken cancellationToken = default)
         {
             string url = $"EntityDataBasic?key={cuit}";
+            TimeSpan expiration = this.options.Value.EntityDataBasicExpiration;
 
-            return await GetAsync<EntityBasicData>(url);
+            return await GetFromCacheOrMakeRequestAsync<EntityBasicData>(
+                url, EntityBasicDataSemaphore, expiration, cancellationToken);
         }
 
         public async Task<EntityFullData> GetEntityDataFullAsync(string cuit, CancellationToken cancellationToken = default)
         {
             string url = $"EntityDataFull?key={cuit}";
+            TimeSpan expiration = this.options.Value.EntityDataFullExpiration;
 
-            return await GetAsync<EntityFullData>(url);
+            return await GetFromCacheOrMakeRequestAsync<EntityFullData>(
+                url, EntityFullDataSemaphore, expiration, cancellationToken);
         }
 
         public async Task<SpecialRecordEntry> GetSpecialRecordsAsync(string cuit, string rule, CancellationToken cancellationToken = default)
         {
             string url = $"SpecialRecord?key={cuit}&rule={rule}";
+            TimeSpan expiration = this.options.Value.SpecialRecordsExpiration;
 
-            return await GetAsync<SpecialRecordEntry>(url);
+            return await GetFromCacheOrMakeRequestAsync<SpecialRecordEntry>(
+                url, SpecialRecordSemaphore, expiration, cancellationToken);
         }
 
         public async Task<BankAccountDetail> GetBankAccountDetailAsync(string cbu, CancellationToken cancellationToken = default)
         {
             string url = $"BankAccountDetails?key={cbu}";
+            TimeSpan expiration = this.options.Value.BankAccountDetailExpiration;
 
-            return await GetAsync<BankAccountDetail>(url);
+            return await GetFromCacheOrMakeRequestAsync<BankAccountDetail>(
+                url, BankAccountDetailSemaphore, expiration, cancellationToken);
         }
 
         public async Task<BankAccountOwner> GetBankAccountOwnershipAsync(string cbu, string cuit, CancellationToken cancellationToken = default)
         {
             string url = $"BankAccountOwnership?account_address={cbu}&owner_key={cuit}";
+            TimeSpan expiration = this.options.Value.BankAccountOwnershipExpiration;
 
-            return await GetAsync<BankAccountOwner>(url);
+            return await GetFromCacheOrMakeRequestAsync<BankAccountOwner>(
+                url, BankAccountOwnershipSemaphore, expiration, cancellationToken);
         }
 
-        private async Task<TResponse> GetAsync<TResponse>(string url, CancellationToken cancellationToken = default)
+        private async Task<TResponse> GetFromCacheOrMakeRequestAsync<TResponse>(string url, SemaphoreSlim semaphore, TimeSpan expiration, CancellationToken cancellationToken = default)
         {
-            HttpResponseMessage httpResponseMessage =
-                await this.httpClient.GetAsync(url, cancellationToken);
+            if (this.cacheAccessor.TryGetValue(url, out object value))
+                return (TResponse)value;
 
-            string content = await httpResponseMessage.Content
-                .ReadAsStringAsync();
+            try
+            {
+                await semaphore.WaitAsync();
 
-            return JsonConvert.DeserializeObject<TResponse>(content);
+                if (this.cacheAccessor.TryGetValue(url, out value))
+                    return (TResponse)value;
+
+                HttpResponseMessage httpResponseMessage =
+                    await this.httpClient.GetAsync(url, cancellationToken);
+
+                string content = await httpResponseMessage.Content
+                    .ReadAsStringAsync();
+
+                TResponse response = JsonConvert.DeserializeObject<TResponse>(content);
+
+                this.cacheAccessor.Set(url, response, expiration);
+
+                return response;
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
     }
 }

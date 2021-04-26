@@ -36,10 +36,10 @@ namespace PidPluginUseSample
 
                 CancellationToken cancellationToken = CancellationToken.None;
 
-                EntityFullData entityFullDataResponse = await pidPluginClient
-                    .GetEntityDataFullAsync(cuit, cancellationToken);
+                EntityBasicData entityBasicDataResponse = await pidPluginClient
+                    .GetEntityDataBasicAsync(cuit, cancellationToken);
 
-                Console.WriteLine(JsonConvert.SerializeObject(entityFullDataResponse, Formatting.Indented));
+                Console.WriteLine(JsonConvert.SerializeObject(entityBasicDataResponse, Formatting.Indented));
             }
             catch (Exception ex)
             {
@@ -55,7 +55,7 @@ namespace PidPluginUseSample
             configuration.GetSection("PidPluginSettings")
                 .Bind(pidConnectorSettings);
 
-            services.AddPidConnector(pidConnectorSettings);
+            services.AddPidPlugin(pidConnectorSettings);
         }
     }
 }
