@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
-namespace PidPluginUseSample
+namespace PidPluginSample
 {
     class Program
     {

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30611.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PidPluginUseSample", "PidPluginUseSample\PidPluginUseSample.csproj", "{C6D1CB20-EB25-4E7F-B75F-F13E14569B3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PidPluginSample", "PidPluginSample\PidPluginSample.csproj", "{C6D1CB20-EB25-4E7F-B75F-F13E14569B3F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PidPlugin", "..\src\PidPlugin\PidPlugin.csproj", "{65FED414-010C-436B-B21D-B2EF4775948E}"
 EndProject

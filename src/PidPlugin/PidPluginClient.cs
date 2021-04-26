@@ -4,8 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using PidPlugin.Dtos;
 using PidPlugin.Cache;
+using PidPlugin.Extensions;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 
 namespace PidPlugin
 {
@@ -80,6 +80,9 @@ namespace PidPlugin
 
         private async Task<TResponse> GetFromCacheOrMakeRequestAsync<TResponse>(string url, SemaphoreSlim semaphore, TimeSpan expiration, CancellationToken cancellationToken = default)
         {
+            if (expiration.TotalMinutes <= 0)
+                return await this.httpClient.GetAsync<TResponse>(url, cancellationToken);
+
             if (this.cacheAccessor.TryGetValue(url, out object value))
                 return (TResponse)value;
 
@@ -90,13 +93,8 @@ namespace PidPlugin
                 if (this.cacheAccessor.TryGetValue(url, out value))
                     return (TResponse)value;
 
-                HttpResponseMessage httpResponseMessage =
-                    await this.httpClient.GetAsync(url, cancellationToken);
-
-                string content = await httpResponseMessage.Content
-                    .ReadAsStringAsync();
-
-                TResponse response = JsonConvert.DeserializeObject<TResponse>(content);
+                TResponse response = await this.httpClient
+                    .GetAsync<TResponse>(url, cancellationToken);
 
                 this.cacheAccessor.Set(url, response, expiration);
 
