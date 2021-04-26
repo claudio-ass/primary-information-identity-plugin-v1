@@ -1,4 +1,4 @@
-# primary-information-identity-plugin
+# Primary Information Identity Plugin
 
 This project is a plugin to use [Primary Information Identity](https://i.primary.com.ar/pid/landing/?s=id.primary.com.ar) services.
 
@@ -11,7 +11,7 @@ This project is a plugin to use [Primary Information Identity](https://i.primary
 
 **Cache**
 
-PidPlugin have an inside caching strategy. This feature allows to reduce the
+PidPlugin have an internal caching strategy. This feature allows to reduce the
 number of request to Primary Information Identity, and increase its performance.
 
 - `EntityDataBasicInMinutes`: Total minutes to cache entity data basic response.
