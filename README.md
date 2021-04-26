@@ -22,13 +22,13 @@ number of request to Primary Information Identity, and increase its performance.
 
 ## Usage Sample
 
-Import namespace
+Import namespace:
 
 ```C#
 	using PidPlugin.Extensions;
 ```
 
-Inject and configure PidPlugin service
+Inject and configure PidPlugin service:
 
 ```C#
     static void AddPidPlugin(IServiceCollection services, IConfiguration configuration)
@@ -45,7 +45,8 @@ Inject and configure PidPlugin service
 
 ## Support
 
-You can get support for use this plugin at [Plugint Technology SAS](https://www.plugint.com/)
+You can get support for use this plugin at [Plugint Technology SAS](https://www.plugint.com/).
+Mail: support@plugint.com
 
 ## License
 
