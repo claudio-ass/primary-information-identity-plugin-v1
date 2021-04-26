@@ -42,3 +42,11 @@ Inject and configure PidPlugin service
         services.AddPidPlugin(pidConnectorSettings);
     }
 ```
+
+## Support
+
+You can get support for use this plugin at [Plugint Technology SAS](https://www.plugint.com/)
+
+## License
+
+MIT
